@@ -13,8 +13,7 @@ project "Server"
     }
 
     links {
-        "Common",
-        "PDCurses"
+        "Common"
     }
 
     includedirs {

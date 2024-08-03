@@ -13,7 +13,7 @@ project "Common"
     }
 
     links {
-        "PDCurses"
+        
     }
 
     includedirs {
