@@ -1,5 +1,6 @@
 # ChatWin
 
+[![Build status](https://github.com/landiluigi746/ChatWin/workflows/Windows/badge.svg)](https://github.com/landiluigi746/ChatWin/actions/workflows/windows.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://github.com/landiluigi746/llib/LICENSE)
 [![Language: C](https://img.shields.io/badge/Language-C-blue)](https://github.com/topics/c)
 
