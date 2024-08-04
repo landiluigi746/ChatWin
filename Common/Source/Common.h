@@ -15,6 +15,8 @@
 #define LOG_WARNING "WARNING"
 #define LOG_ERROR "ERROR"
 
+#define CHAT_CMD_EXIT "/exit"
+
 #define BUF_SIZE 128
 
 extern void VA_Log(const char* tag, const char* msg, va_list args);
@@ -28,5 +30,7 @@ extern SOCKADDR_IN ServiceCreate(const char* addr, u_short port);
 
 extern void Wait(clock_t milliseconds);
 extern size_t StrInput(char* buffer, size_t capacity);
+
+extern void ResizeConsoleWindow(int width, int height);
 
 #endif // CHAT_APP_COMMON_H__

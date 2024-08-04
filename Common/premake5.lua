@@ -17,8 +17,7 @@ project "Common"
     }
 
     includedirs {
-        "Source",
-        "../Vendor/pdcurses-premake/Source"
+        "Source"
     }
 
     defines {

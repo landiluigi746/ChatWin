@@ -23,8 +23,6 @@ int main(const int argc, const char* argv[])
     ClientInit(argv[1], port);
     ClientRun();
     ClientShutdown();
-    
-    system("pause");
 
 	return 0;
 }

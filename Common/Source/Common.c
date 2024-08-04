@@ -106,3 +106,14 @@ size_t StrInput(char* buffer, size_t capacity)
 
 	return count;
 }
+
+void ResizeConsoleWindow(int width, int height)
+{
+	HWND console = GetConsoleWindow();
+	RECT rect;
+
+	GetWindowRect(console, &rect);
+	MoveWindow(console, rect.left, rect.top, width, height, TRUE);
+
+	return;
+}

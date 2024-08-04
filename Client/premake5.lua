@@ -13,12 +13,13 @@ project "Client"
     }
 
     links {
-        "Common"
+        "Common",
+        "PDCurses"
     }
 
     includedirs {
-        "../Vendor/pdcurses-premake/Source",
-        "../Common/Source"
+        "../Common/Source",
+        "../Vendor/pdcurses-premake/Source"
     }
 
     defines {

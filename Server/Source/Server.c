@@ -117,11 +117,11 @@ DWORD WINAPI HandleClient(LPVOID unused)
             SendMessageToAll(client.id, client.username, client.buffer);
         }
         else if (recvCount == 0)
-        {
-            Log(LOG_INFO, "%s disconnected!", client.username);
             break;
-        }
     }
+
+    closesocket(client.socket);
+    Log(LOG_INFO, "%s disconnected!", client.username);
 
     return TRUE;
 }
