@@ -3,6 +3,7 @@
 typedef struct
 {
 	SOCKET socket;
+	BOOL connected;
 	UINT64 id;
 	SOCKADDR_IN addr;
 	char username[BUF_SIZE];
@@ -24,9 +25,16 @@ static Server server = { 0 };
 static DWORD WINAPI HandleClient(LPVOID unused);
 static void SendMessageToAll(UINT64 senderId, const char* senderName, const char* msg);
 
+static BOOL WINAPI Close(DWORD ctrlType);
+
 void ServerInit(const char* addr, u_short port)
 {
+	system("cls");
+
 	InitWSA();
+
+	SetConsoleTitleA("ChatWin - Server");
+	SetConsoleCtrlHandler(&Close, TRUE);
 
 	server.socket = SocketCreate();
 	server.service = ServiceCreate(addr, port);
@@ -34,8 +42,8 @@ void ServerInit(const char* addr, u_short port)
 	CloseOnSocketError(bind(server.socket, (SOCKADDR*)&server.service, sizeof(server.service)) == SOCKET_ERROR, server.socket, "ServerInit(): bind() failed!");
 	Log(LOG_INFO, "ServerInit(): bind() to %s:%hu done successfully!", inet_ntoa(server.service.sin_addr), ntohs(server.service.sin_port));
 
-	CloseOnSocketError(listen(server.socket, SOMAXCONN) == SOCKET_ERROR, server.socket, "ServerInit(): listen() failed!");
-	Log(LOG_INFO, "ServerInit(): listen() done successfully!");
+	CloseOnSocketError(listen(server.socket, MAX_CLIENTS) == SOCKET_ERROR, server.socket, "ServerInit(): listen() failed!");
+	Log(LOG_INFO, "ServerInit(): listen() done successfully! Max connections allowed: %zu", MAX_CLIENTS);
 
 	return;
 }
@@ -77,6 +85,12 @@ void ServerRun(void)
 
 void ServerShutdown(void)
 {
+	size_t i;
+
+	for (i = 0; i < server.clientsNum; ++i)
+		if (server.clients[i].connected)
+			closesocket(server.clients[i].socket);
+
 	closesocket(server.socket);
 	WSACleanup();
 
@@ -103,15 +117,20 @@ DWORD WINAPI HandleClient(LPVOID unused)
 		return TRUE;
 	}
 
-	while (TRUE)
+	client.connected = TRUE;
+
+	while (client.connected)
 	{
 		ZeroMemory(client.buffer, BUF_SIZE);
 		recvCount = recv(client.socket, client.buffer, BUF_SIZE, 0);
 
 		if (recvCount > 0)
 		{
-			if (strcmp(client.buffer, "/exit") == 0)
+			if (strcmp(client.buffer, CHAT_CMD_EXIT) == 0)
+			{
+				client.connected = FALSE;
 				break;
+			}
 
 			Log(LOG_INFO, "%s says: %s", client.username, client.buffer);
 			SendMessageToAll(client.id, client.username, client.buffer);
@@ -133,8 +152,25 @@ void SendMessageToAll(UINT64 senderId, const char* senderName, const char* msg)
 	int len = sprintf_s(buffer, BUF_SIZE * 2 + 5, "[%s]: %s", senderName, msg);
 
 	for (i = 0; i < server.clientsNum; i++)
-		if (server.clients[i].id != senderId)
+		if (server.clients[i].id != senderId && server.clients[i].connected)
 			send(server.clients[i].socket, buffer, len, 0);
 
 	return;
+}
+
+BOOL WINAPI Close(DWORD ctrlType)
+{
+	switch (ctrlType)
+	{
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+		ServerShutdown();
+
+		return TRUE;
+	default:
+		break;
+	}
+
+	return FALSE;
 }

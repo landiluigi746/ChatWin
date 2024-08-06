@@ -125,6 +125,7 @@ DWORD WINAPI Send(LPVOID unused)
 
 	while (client.connected)
 	{
+		ZeroMemory(buffer, BUF_SIZE);
 		wgetnstr(inputWindow, buffer, BUF_SIZE - 1);
 		wclear(inputWindow);
 
@@ -137,7 +138,7 @@ DWORD WINAPI Send(LPVOID unused)
 		wrefresh(chatWindow);
 		send(client.socket, buffer, (int)strlen(buffer), 0);
 
-		if (strcmp(buffer, "/exit") == 0)
+		if (strcmp(buffer, CHAT_CMD_EXIT) == 0)
 			client.connected = FALSE;
 	}
 
