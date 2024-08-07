@@ -52,9 +52,11 @@ void ServerRun(void)
 {
 	Client newClient = { 0 };
 	int addrSize = sizeof(newClient.addr);
+	size_t i, newClientIndex;
 
 	while (TRUE)
 	{
+		ZeroMemory(&newClient, sizeof(Client));
 		newClient.socket = accept(server.socket, (SOCKADDR*)&newClient.addr, &addrSize);
 
 		if (newClient.socket == INVALID_SOCKET)
@@ -66,7 +68,19 @@ void ServerRun(void)
 			continue;
 		}
 
-		server.clients[server.clientsNum++] = newClient;
+		newClientIndex = -1;
+
+		for (i = 0; i < server.clientsNum; ++i)
+		{
+			if (!server.clients[i].connected)
+			{
+				newClientIndex = i;
+				break;
+			}
+		}
+
+		if (newClientIndex == -1)
+			newClientIndex = server.clientsNum;
 
 		newClient.id = server.clientsNum;
 		newClient.thread = CreateThread(NULL, 0, &HandleClient, NULL, 0, &newClient.threadId);
@@ -75,9 +89,12 @@ void ServerRun(void)
 			Log(LOG_WARNING, "Unable to create new thread for client");
 		else
 		{
+			server.clients[newClientIndex] = newClient;
+			++server.clientsNum;
 			Log(LOG_INFO, "New client connected!");
 			CloseHandle(newClient.thread);
 		}
+
 	}
 
 	return;
@@ -99,17 +116,17 @@ void ServerShutdown(void)
 
 DWORD WINAPI HandleClient(LPVOID unused)
 {
-	Client client = server.clients[server.clientsNum - 1];
+	Client* client = &server.clients[server.clientsNum - 1];
 	int recvCount;
 
 	const char welcomeMsg[] = "You connected successfully to the server! Enter your username: ";
-	send(client.socket, welcomeMsg, sizeof(welcomeMsg) - 1, 0);
+	send(client->socket, welcomeMsg, sizeof(welcomeMsg) - 1, 0);
 
-	recvCount = recv(client.socket, client.username, BUF_SIZE, 0);
+	recvCount = recv(client->socket, client->username, BUF_SIZE, 0);
 
 	if (recvCount > 0)
 	{
-		Log(LOG_INFO, "%s connected!", client.username);
+		Log(LOG_INFO, "%s connected!", client->username);
 	}
 	else if (recvCount == 0)
 	{
@@ -117,30 +134,39 @@ DWORD WINAPI HandleClient(LPVOID unused)
 		return TRUE;
 	}
 
-	client.connected = TRUE;
+	client->connected = TRUE;
 
-	while (client.connected)
+	while (client->connected)
 	{
-		ZeroMemory(client.buffer, BUF_SIZE);
-		recvCount = recv(client.socket, client.buffer, BUF_SIZE, 0);
+		ZeroMemory(client->buffer, BUF_SIZE);
+		recvCount = recv(client->socket, client->buffer, BUF_SIZE, 0);
 
 		if (recvCount > 0)
 		{
-			if (strcmp(client.buffer, CHAT_CMD_EXIT) == 0)
+			if (strcmp(client->buffer, CHAT_CMD_EXIT) == 0)
 			{
-				client.connected = FALSE;
+				client->connected = FALSE;
 				break;
 			}
 
-			Log(LOG_INFO, "%s says: %s", client.username, client.buffer);
-			SendMessageToAll(client.id, client.username, client.buffer);
+			Log(LOG_INFO, "%s says: %s", client->username, client->buffer);
+			SendMessageToAll(client->id, client->username, client->buffer);
 		}
 		else if (recvCount == 0)
 			break;
 	}
 
-	closesocket(client.socket);
-	Log(LOG_INFO, "%s disconnected!", client.username);
+	closesocket(client->socket);
+	Log(LOG_INFO, "%s disconnected!", client->username);
+
+	*client = server.clients[server.clientsNum--];
+
+	size_t i;
+
+	for (i = 0; i < server.clientsNum; ++i)
+		Log(LOG_INFO, "%zu | %s, %zu, %d", i, server.clients[i].username, server.clients[i].id, server.clients[i].connected);
+
+	Log(LOG_INFO, "Number of clients: %zu", server.clientsNum);
 
 	return TRUE;
 }

@@ -14,6 +14,7 @@ os.execute("git submodule update --init")
 
 group "Dependencies"
     include "./Vendor/pdcurses-premake/premake5.lua"
+    include "./Vendor/llib/premake5.lua"
 group ""
 
 include "Server"

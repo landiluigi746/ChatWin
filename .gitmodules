@@ -1,3 +1,7 @@
 [submodule "Vendor/pdcurses-premake"]
 	path = Vendor/pdcurses-premake
 	url = https://github.com/landiluigi746/pdcurses-premake
+[submodule "Vendor/llib"]
+	path = Vendor/llib
+	url = https://github.com/landiluigi746/llib
+	branch = premake_prj

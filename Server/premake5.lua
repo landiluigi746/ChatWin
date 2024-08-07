@@ -14,12 +14,14 @@ project "Server"
 
     links {
         "Common",
-        "PDCurses"
+        "PDCurses",
+        "llib"
     }
 
     includedirs {
         "../Common/Source",
-        "../Vendor/pdcurses-premake/Source"
+        "../Vendor/pdcurses-premake/Source",
+        "../Vendor/llib/Source"
     }
 
     defines {
