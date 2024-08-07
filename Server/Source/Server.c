@@ -1,4 +1,5 @@
 #include "Server.h"
+#include <llib_darray.h>
 
 typedef struct
 {
@@ -16,8 +17,7 @@ typedef struct
 {
 	SOCKET socket;
 	SOCKADDR_IN service;
-	Client clients[MAX_CLIENTS];
-	size_t clientsNum;
+	darray* clients;
 } Server;
 
 static Server server = { 0 };
@@ -44,6 +44,8 @@ void ServerInit(const char* addr, u_short port)
 
 	CloseOnSocketError(listen(server.socket, MAX_CLIENTS) == SOCKET_ERROR, server.socket, "ServerInit(): listen() failed!");
 	Log(LOG_INFO, "ServerInit(): listen() done successfully! Max connections allowed: %zu", MAX_CLIENTS);
+
+	server.clients = DARRAY(sizeof(Client), MAX_CLIENTS);
 
 	return;
 }
